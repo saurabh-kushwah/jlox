@@ -148,7 +148,16 @@ public class Scanner {
           while (peek() != '\n' && !isAtEnd()) {
             advance();
           }
-        } else {
+        } else if(match('*')){
+          while(!isAtEnd()){
+            if(peek() == '\n'){
+              line++;
+            }else if(match('*') && match('/')){
+              break;
+            }
+            advance();
+          }
+        }else {
           addToken(SLASH);
         }
         break;
