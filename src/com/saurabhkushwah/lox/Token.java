@@ -1,4 +1,4 @@
-package com.saurabhkushwah;
+package com.saurabhkushwah.lox;
 
 public class Token {
 

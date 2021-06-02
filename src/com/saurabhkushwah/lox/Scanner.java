@@ -1,43 +1,43 @@
-package com.saurabhkushwah;
+package com.saurabhkushwah.lox;
 
-import static com.saurabhkushwah.TokenType.AND;
-import static com.saurabhkushwah.TokenType.BANG;
-import static com.saurabhkushwah.TokenType.BANG_EQUAL;
-import static com.saurabhkushwah.TokenType.CLASS;
-import static com.saurabhkushwah.TokenType.COMMA;
-import static com.saurabhkushwah.TokenType.DOT;
-import static com.saurabhkushwah.TokenType.ELSE;
-import static com.saurabhkushwah.TokenType.EOF;
-import static com.saurabhkushwah.TokenType.EQUAL;
-import static com.saurabhkushwah.TokenType.EQUAL_EQUAL;
-import static com.saurabhkushwah.TokenType.FALSE;
-import static com.saurabhkushwah.TokenType.FOR;
-import static com.saurabhkushwah.TokenType.FUN;
-import static com.saurabhkushwah.TokenType.GREATER;
-import static com.saurabhkushwah.TokenType.GREATER_EQUAL;
-import static com.saurabhkushwah.TokenType.IDENTIFIER;
-import static com.saurabhkushwah.TokenType.IF;
-import static com.saurabhkushwah.TokenType.LEFT_BRACE;
-import static com.saurabhkushwah.TokenType.LEFT_PAREN;
-import static com.saurabhkushwah.TokenType.LESS;
-import static com.saurabhkushwah.TokenType.LESS_EQUAL;
-import static com.saurabhkushwah.TokenType.MINUS;
-import static com.saurabhkushwah.TokenType.NIL;
-import static com.saurabhkushwah.TokenType.NUMBER;
-import static com.saurabhkushwah.TokenType.OR;
-import static com.saurabhkushwah.TokenType.PLUS;
-import static com.saurabhkushwah.TokenType.RETURN;
-import static com.saurabhkushwah.TokenType.RIGHT_BRACE;
-import static com.saurabhkushwah.TokenType.RIGHT_PAREN;
-import static com.saurabhkushwah.TokenType.SEMICOLON;
-import static com.saurabhkushwah.TokenType.SLASH;
-import static com.saurabhkushwah.TokenType.STAR;
-import static com.saurabhkushwah.TokenType.STRING;
-import static com.saurabhkushwah.TokenType.SUPER;
-import static com.saurabhkushwah.TokenType.THIS;
-import static com.saurabhkushwah.TokenType.TRUE;
-import static com.saurabhkushwah.TokenType.VAR;
-import static com.saurabhkushwah.TokenType.WHILE;
+import static com.saurabhkushwah.lox.TokenType.AND;
+import static com.saurabhkushwah.lox.TokenType.BANG;
+import static com.saurabhkushwah.lox.TokenType.BANG_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.CLASS;
+import static com.saurabhkushwah.lox.TokenType.COMMA;
+import static com.saurabhkushwah.lox.TokenType.DOT;
+import static com.saurabhkushwah.lox.TokenType.ELSE;
+import static com.saurabhkushwah.lox.TokenType.EOF;
+import static com.saurabhkushwah.lox.TokenType.EQUAL;
+import static com.saurabhkushwah.lox.TokenType.EQUAL_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.FALSE;
+import static com.saurabhkushwah.lox.TokenType.FOR;
+import static com.saurabhkushwah.lox.TokenType.FUN;
+import static com.saurabhkushwah.lox.TokenType.GREATER;
+import static com.saurabhkushwah.lox.TokenType.GREATER_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.IDENTIFIER;
+import static com.saurabhkushwah.lox.TokenType.IF;
+import static com.saurabhkushwah.lox.TokenType.LEFT_BRACE;
+import static com.saurabhkushwah.lox.TokenType.LEFT_PAREN;
+import static com.saurabhkushwah.lox.TokenType.LESS;
+import static com.saurabhkushwah.lox.TokenType.LESS_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.MINUS;
+import static com.saurabhkushwah.lox.TokenType.NIL;
+import static com.saurabhkushwah.lox.TokenType.NUMBER;
+import static com.saurabhkushwah.lox.TokenType.OR;
+import static com.saurabhkushwah.lox.TokenType.PLUS;
+import static com.saurabhkushwah.lox.TokenType.RETURN;
+import static com.saurabhkushwah.lox.TokenType.RIGHT_BRACE;
+import static com.saurabhkushwah.lox.TokenType.RIGHT_PAREN;
+import static com.saurabhkushwah.lox.TokenType.SEMICOLON;
+import static com.saurabhkushwah.lox.TokenType.SLASH;
+import static com.saurabhkushwah.lox.TokenType.STAR;
+import static com.saurabhkushwah.lox.TokenType.STRING;
+import static com.saurabhkushwah.lox.TokenType.SUPER;
+import static com.saurabhkushwah.lox.TokenType.THIS;
+import static com.saurabhkushwah.lox.TokenType.TRUE;
+import static com.saurabhkushwah.lox.TokenType.VAR;
+import static com.saurabhkushwah.lox.TokenType.WHILE;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -148,16 +148,16 @@ public class Scanner {
           while (peek() != '\n' && !isAtEnd()) {
             advance();
           }
-        } else if(match('*')){
-          while(!isAtEnd()){
-            if(peek() == '\n'){
+        } else if (match('*')) {
+          while (!isAtEnd()) {
+            if (peek() == '\n') {
               line++;
-            }else if(match('*') && match('/')){
+            } else if (match('*') && match('/')) {
               break;
             }
             advance();
           }
-        }else {
+        } else {
           addToken(SLASH);
         }
         break;
