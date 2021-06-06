@@ -14,6 +14,7 @@ import static com.saurabhkushwah.lox.TokenType.MINUS;
 import static com.saurabhkushwah.lox.TokenType.NIL;
 import static com.saurabhkushwah.lox.TokenType.NUMBER;
 import static com.saurabhkushwah.lox.TokenType.PLUS;
+import static com.saurabhkushwah.lox.TokenType.PRINT;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_PAREN;
 import static com.saurabhkushwah.lox.TokenType.SEMICOLON;
 import static com.saurabhkushwah.lox.TokenType.SLASH;
@@ -21,9 +22,15 @@ import static com.saurabhkushwah.lox.TokenType.STAR;
 import static com.saurabhkushwah.lox.TokenType.STRING;
 import static com.saurabhkushwah.lox.TokenType.TRUE;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
+ * program        → statement* EOF
+ * statement      → exprStmt
+ *                | printStmt ;
+ * exprStmt       → expression ";" ;
+ * printStmt      → print expression ";" ;
  * expression     → equality ;
  * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
  * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -53,12 +60,37 @@ public class Parser {
     this.tokens = tokens;
   }
 
-  public Expr parse() {
+  public List<Stmt> parse() {
+    List<Stmt> stmts = new ArrayList<>();
+
     try {
-      return expression();
+      while (!isAtEnd()) {
+        stmts.add(statement());
+      }
     } catch (ParseError error) {
       return null;
     }
+
+    return stmts;
+  }
+
+  private Stmt statement() {
+    if (match(PRINT)) {
+      return printStatement();
+    }
+    return expressionStatement();
+  }
+
+  private Stmt printStatement() {
+    Expr expr = expression();
+    consume(SEMICOLON, "Expect ; after value.");
+    return new Stmt.Print(expr);
+  }
+
+  private Stmt expressionStatement() {
+    Expr expr = expression();
+    consume(SEMICOLON, "Expect ; after expression.");
+    return new Stmt.Expression(expr);
   }
 
   private Expr expression() {

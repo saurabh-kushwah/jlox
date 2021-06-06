@@ -56,13 +56,13 @@ public class Lox {
     List<Token> tokens = scan.scanTokens();
 
     Parser parser = new Parser(tokens);
-    Expr expr = parser.parse();
+    List<Stmt> statements = parser.parse();
 
     if (hadError) {
       return;
     }
 
-    interpreter.interpret(expr);
+    interpreter.interpret(statements);
 //    System.out.println(new AstPrinter().print(expr));
   }
 

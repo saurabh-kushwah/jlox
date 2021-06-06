@@ -26,6 +26,7 @@ import static com.saurabhkushwah.lox.TokenType.NIL;
 import static com.saurabhkushwah.lox.TokenType.NUMBER;
 import static com.saurabhkushwah.lox.TokenType.OR;
 import static com.saurabhkushwah.lox.TokenType.PLUS;
+import static com.saurabhkushwah.lox.TokenType.PRINT;
 import static com.saurabhkushwah.lox.TokenType.RETURN;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_BRACE;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_PAREN;
@@ -70,6 +71,8 @@ public class Scanner {
 
     keywords.put("fun", FUN);
     keywords.put("return", RETURN);
+
+    keywords.put("print", PRINT);
   }
 
   final String source;
