@@ -52,7 +52,8 @@ public class Interpreter implements Expr.Visitor<Object> {
         } else if (left instanceof Double && right instanceof Double) {
           return (double) left + (double) right;
         }
-        throw new RuntimeError(expr.operator, "Operands must be either 2 numbers or one of them must be string");
+        throw new RuntimeError(expr.operator,
+            "Operands must be either 2 numbers or one of them must be string");
       case MINUS:
         checkNumberOperands(expr.operator, left, right);
         return (double) left - (double) right;
@@ -61,6 +62,9 @@ public class Interpreter implements Expr.Visitor<Object> {
         return (double) left * (double) right;
       case SLASH:
         checkNumberOperands(expr.operator, left, right);
+        if ((double) right == 0) {
+          throw new RuntimeError(expr.operator, "Division by zero");
+        }
         return (double) left / (double) right;
 
       case GREATER:
