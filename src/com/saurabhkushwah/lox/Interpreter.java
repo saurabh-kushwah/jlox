@@ -47,12 +47,12 @@ public class Interpreter implements Expr.Visitor<Object> {
 
     switch (expr.operator.type) {
       case PLUS:
-        if (left instanceof String && right instanceof String) {
-          return (String) left + (String) right;
+        if (left instanceof String || right instanceof String) {
+          return stringify(left) + stringify(right);
         } else if (left instanceof Double && right instanceof Double) {
           return (double) left + (double) right;
         }
-        throw new RuntimeError(expr.operator, "Both operand must be string or numbers.");
+        throw new RuntimeError(expr.operator, "Operands must be either 2 numbers or one of them must be string");
       case MINUS:
         checkNumberOperands(expr.operator, left, right);
         return (double) left - (double) right;
