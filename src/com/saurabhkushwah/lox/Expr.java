@@ -2,6 +2,8 @@ package com.saurabhkushwah.lox;
 
 abstract class Expr {
 
+  abstract <R> R accept(Visitor<R> visitor);
+
   interface Visitor<R> {
 
     R visitLiteralExpr(Literal expr);
@@ -19,6 +21,8 @@ abstract class Expr {
 
   static class Literal extends Expr {
 
+    final Object value;
+
     Literal(Object value) {
       this.value = value;
     }
@@ -27,11 +31,11 @@ abstract class Expr {
     <R> R accept(Visitor<R> visitor) {
       return visitor.visitLiteralExpr(this);
     }
-
-    final Object value;
   }
 
   static class Variable extends Expr {
+
+    final Token name;
 
     Variable(Token name) {
       this.name = name;
@@ -41,11 +45,12 @@ abstract class Expr {
     <R> R accept(Visitor<R> visitor) {
       return visitor.visitVariableExpr(this);
     }
-
-    final Token name;
   }
 
   static class Assign extends Expr {
+
+    final Token name;
+    final Expr value;
 
     Assign(Token name, Expr value) {
       this.name = name;
@@ -56,12 +61,11 @@ abstract class Expr {
     <R> R accept(Visitor<R> visitor) {
       return visitor.visitAssignExpr(this);
     }
-
-    final Token name;
-    final Expr value;
   }
 
   static class Grouping extends Expr {
+
+    final Expr expression;
 
     Grouping(Expr expression) {
       this.expression = expression;
@@ -71,11 +75,12 @@ abstract class Expr {
     <R> R accept(Visitor<R> visitor) {
       return visitor.visitGroupingExpr(this);
     }
-
-    final Expr expression;
   }
 
   static class Unary extends Expr {
+
+    final Token operator;
+    final Expr right;
 
     Unary(Token operator, Expr right) {
       this.operator = operator;
@@ -86,13 +91,13 @@ abstract class Expr {
     <R> R accept(Visitor<R> visitor) {
       return visitor.visitUnaryExpr(this);
     }
-
-    final Token operator;
-    final Expr right;
   }
 
   static class Binary extends Expr {
 
+    final Expr left;
+    final Token operator;
+    final Expr right;
     Binary(Expr left, Token operator, Expr right) {
       this.left = left;
       this.operator = operator;
@@ -103,11 +108,5 @@ abstract class Expr {
     <R> R accept(Visitor<R> visitor) {
       return visitor.visitBinaryExpr(this);
     }
-
-    final Expr left;
-    final Token operator;
-    final Expr right;
   }
-
-  abstract <R> R accept(Visitor<R> visitor);
 }

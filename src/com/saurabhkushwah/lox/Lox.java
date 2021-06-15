@@ -10,10 +10,9 @@ import java.util.List;
 
 public class Lox {
 
+  private static final Interpreter interpreter = new Interpreter();
   private static boolean hadError;
   private static boolean hadRuntimeError;
-
-  private static final Interpreter interpreter = new Interpreter();
 
   public static void main(String[] args) throws IOException {
     if (args.length > 1) {
@@ -70,17 +69,17 @@ public class Lox {
     report(line, "", message);
   }
 
+  private static void report(int line, String where, String message) {
+    System.err.printf("[Line %d] Error %s: %s\n", line, where, message);
+    hadError = true;
+  }
+
   public static void error(Token token, String message) {
     if (token.type == TokenType.EOF) {
       report(token.line, " at end", message);
     } else {
       report(token.line, " at '" + token.lexeme + "'", message);
     }
-  }
-
-  private static void report(int line, String where, String message) {
-    System.err.printf("[Line %d] Error %s: %s\n", line, where, message);
-    hadError = true;
   }
 
   public static void runtimeError(RuntimeError error) {

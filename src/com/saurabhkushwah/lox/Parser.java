@@ -9,6 +9,7 @@ import static com.saurabhkushwah.lox.TokenType.FALSE;
 import static com.saurabhkushwah.lox.TokenType.GREATER;
 import static com.saurabhkushwah.lox.TokenType.GREATER_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.IDENTIFIER;
+import static com.saurabhkushwah.lox.TokenType.LEFT_BRACE;
 import static com.saurabhkushwah.lox.TokenType.LEFT_PAREN;
 import static com.saurabhkushwah.lox.TokenType.LESS;
 import static com.saurabhkushwah.lox.TokenType.LESS_EQUAL;
@@ -17,6 +18,7 @@ import static com.saurabhkushwah.lox.TokenType.NIL;
 import static com.saurabhkushwah.lox.TokenType.NUMBER;
 import static com.saurabhkushwah.lox.TokenType.PLUS;
 import static com.saurabhkushwah.lox.TokenType.PRINT;
+import static com.saurabhkushwah.lox.TokenType.RIGHT_BRACE;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_PAREN;
 import static com.saurabhkushwah.lox.TokenType.SEMICOLON;
 import static com.saurabhkushwah.lox.TokenType.SLASH;
@@ -31,12 +33,14 @@ import java.util.List;
 /*
  * program        → declaration* EOF
  * declaration    → varDec
- *                | statement ;
+ *                | statement
  * varDec         → "var" IDENTIFIER ( "=" expression )? ";" ;
  * statement      → exprStmt
  *                | printStmt ;
+ *                | block ;
  * exprStmt       → expression ";" ;
  * printStmt      → print expression ";" ;
+ * block          → "{" declaration* "}" ;
  * expression     → assignment ;
  * assignment     → IDENTIFIER "=" assignment
  *                | equality ;
@@ -58,13 +62,8 @@ import java.util.List;
  */
 public class Parser {
 
-  private static class ParseError extends RuntimeException {
-
-  }
-
   private final List<Token> tokens;
   private int current;
-
   public Parser(List<Token> tokens) {
     this.tokens = tokens;
   }
@@ -112,7 +111,23 @@ public class Parser {
     if (match(PRINT)) {
       return printStatement();
     }
+
+    if (match(LEFT_BRACE)) {
+      return new Stmt.Block(block());
+    }
+
     return expressionStatement();
+  }
+
+  private List<Stmt> block() {
+    List<Stmt> statements = new ArrayList<>();
+
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      statements.add(declaration());
+    }
+
+    consume(RIGHT_BRACE, "Expect '}' at the end of block.");
+    return statements;
   }
 
   private Stmt printStatement() {
@@ -317,5 +332,9 @@ public class Parser {
 
   private boolean isAtEnd() {
     return peek().type == EOF;
+  }
+
+  private static class ParseError extends RuntimeException {
+
   }
 }
