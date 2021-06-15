@@ -1,9 +1,11 @@
 package com.saurabhkushwah.lox;
 
+import com.saurabhkushwah.lox.Expr.Assign;
 import com.saurabhkushwah.lox.Expr.Binary;
 import com.saurabhkushwah.lox.Expr.Grouping;
 import com.saurabhkushwah.lox.Expr.Literal;
 import com.saurabhkushwah.lox.Expr.Unary;
+import com.saurabhkushwah.lox.Expr.Variable;
 
 /**
  * AstPrinter returns  Reverse Polish Notation(Postfix) representation of AST
@@ -35,6 +37,16 @@ public class AstPrinter implements Expr.Visitor<String> {
       return "nil";
     }
     return expr.value.toString();
+  }
+
+  @Override
+  public String visitVariableExpr(Variable expr) {
+    return null;
+  }
+
+  @Override
+  public String visitAssignExpr(Assign expr) {
+    return null;
   }
 
   private String parenthesize(String name, Expr... exprs) {

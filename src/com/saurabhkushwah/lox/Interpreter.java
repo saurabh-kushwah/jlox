@@ -1,14 +1,19 @@
 package com.saurabhkushwah.lox;
 
+import com.saurabhkushwah.lox.Expr.Assign;
 import com.saurabhkushwah.lox.Expr.Binary;
 import com.saurabhkushwah.lox.Expr.Grouping;
 import com.saurabhkushwah.lox.Expr.Literal;
 import com.saurabhkushwah.lox.Expr.Unary;
+import com.saurabhkushwah.lox.Expr.Variable;
 import com.saurabhkushwah.lox.Stmt.Expression;
 import com.saurabhkushwah.lox.Stmt.Print;
+import com.saurabhkushwah.lox.Stmt.Var;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
+
+  private final Environment environment = new Environment();
 
   public void interpret(List<Stmt> statements) {
     try {
@@ -120,6 +125,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     return expr.value;
   }
 
+  @Override
+  public Object visitVariableExpr(Variable expr) {
+    return environment.get(expr.name);
+  }
+
+  @Override
+  public Object visitAssignExpr(Assign expr) {
+    Object value = evaluate(expr.value);
+    environment.assign(expr.name, value);
+    return value;
+  }
+
   private void checkNumberOperand(Token operator, Object operand) {
     if (operand instanceof Double) {
       return;
@@ -164,6 +181,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   public Void visitPrintStmt(Print stmt) {
     Object value = evaluate(stmt.expression);
     System.out.println(stringify(value));
+    return null;
+  }
+
+  @Override
+  public Void visitVarStmt(Var stmt) {
+    Object value = null;
+
+    if (stmt.initializer != null) {
+      value = evaluate(stmt.initializer);
+    }
+
+    environment.define(stmt.name.lexeme, value);
     return null;
   }
 }

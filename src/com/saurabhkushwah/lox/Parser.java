@@ -3,10 +3,12 @@ package com.saurabhkushwah.lox;
 import static com.saurabhkushwah.lox.TokenType.BANG;
 import static com.saurabhkushwah.lox.TokenType.BANG_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.EOF;
+import static com.saurabhkushwah.lox.TokenType.EQUAL;
 import static com.saurabhkushwah.lox.TokenType.EQUAL_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.FALSE;
 import static com.saurabhkushwah.lox.TokenType.GREATER;
 import static com.saurabhkushwah.lox.TokenType.GREATER_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.IDENTIFIER;
 import static com.saurabhkushwah.lox.TokenType.LEFT_PAREN;
 import static com.saurabhkushwah.lox.TokenType.LESS;
 import static com.saurabhkushwah.lox.TokenType.LESS_EQUAL;
@@ -21,17 +23,23 @@ import static com.saurabhkushwah.lox.TokenType.SLASH;
 import static com.saurabhkushwah.lox.TokenType.STAR;
 import static com.saurabhkushwah.lox.TokenType.STRING;
 import static com.saurabhkushwah.lox.TokenType.TRUE;
+import static com.saurabhkushwah.lox.TokenType.VAR;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /*
- * program        → statement* EOF
+ * program        → declaration* EOF
+ * declaration    → varDec
+ *                | statement ;
+ * varDec         → "var" IDENTIFIER ( "=" expression )? ";" ;
  * statement      → exprStmt
  *                | printStmt ;
  * exprStmt       → expression ";" ;
  * printStmt      → print expression ";" ;
- * expression     → equality ;
+ * expression     → assignment ;
+ * assignment     → IDENTIFIER "=" assignment
+ *                | equality ;
  * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
  * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
  * term           → factor ( ( "-" | "+" ) factor )* ;
@@ -39,7 +47,8 @@ import java.util.List;
  * unary          → ( "!" | "-" ) unary
  *                | primary ;
  * primary        → NUMBER | STRING | "true" | "false" | "nil"
- *                | "(" expression ")" ;
+ *                | "(" expression ")"
+ *                | IDENTIFIER ;
  */
 
 /**
@@ -61,17 +70,42 @@ public class Parser {
   }
 
   public List<Stmt> parse() {
-    List<Stmt> stmts = new ArrayList<>();
+    List<Stmt> statements = new ArrayList<>();
 
     try {
       while (!isAtEnd()) {
-        stmts.add(statement());
+        statements.add(declaration());
       }
     } catch (ParseError error) {
       return null;
     }
 
-    return stmts;
+    return statements;
+  }
+
+  private Stmt declaration() {
+    try {
+      if (match(VAR)) {
+        return varDeclaration();
+      }
+
+      return statement();
+    } catch (ParseError error) {
+      synchronize();
+      return null;
+    }
+  }
+
+  private Stmt varDeclaration() {
+    Token name = consume(IDENTIFIER, "Expect variable name.");
+
+    Expr initializer = null;
+    if (match(EQUAL)) {
+      initializer = expression();
+    }
+
+    consume(SEMICOLON, "Expect ';' after variable declarations");
+    return new Stmt.Var(name, initializer);
   }
 
   private Stmt statement() {
@@ -94,7 +128,25 @@ public class Parser {
   }
 
   private Expr expression() {
-    return equality();
+    return assignment();
+  }
+
+  private Expr assignment() {
+    Expr expr = equality();
+
+    if (match(EQUAL)) {
+      Token equals = previous();
+      Expr value = assignment();
+
+      if (expr instanceof Expr.Variable) {
+        Token name = ((Expr.Variable) expr).name;
+        return new Expr.Assign(name, value);
+      }
+
+      error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
   }
 
   private Expr equality() {
@@ -158,10 +210,18 @@ public class Parser {
   private Expr primary() {
     if (match(TRUE)) {
       return new Expr.Literal(true);
-    } else if (match(FALSE)) {
+    }
+
+    if (match(FALSE)) {
       return new Expr.Literal(false);
-    } else if (match(NIL)) {
+    }
+
+    if (match(NIL)) {
       return new Expr.Literal(null);
+    }
+
+    if (match(IDENTIFIER)) {
+      return new Expr.Variable(previous());
     }
 
     if (match(NUMBER, STRING)) {

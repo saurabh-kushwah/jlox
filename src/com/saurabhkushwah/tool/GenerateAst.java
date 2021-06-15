@@ -18,15 +18,18 @@ public class GenerateAst {
 //    String outputDir = "/home/saurabh/Projects/jlox/src/com/saurabhkushwah/lox";
 
     defineAst(outputDir, "Expr", Arrays.asList(
-        "Binary   : Expr left, Token operator, Expr right",
+        "Literal  : Object value",
+        "Variable : Token name",
+        "Assign   : Token name, Expr value",
         "Grouping : Expr expression",
         "Unary    : Token operator, Expr right",
-        "Literal  : Object value"
+        "Binary   : Expr left, Token operator, Expr right"
     ));
 
     defineAst(outputDir, "Stmt", Arrays.asList(
         "Expression : Expr expression",
-        "Print      : Expr expression"
+        "Print      : Expr expression",
+        "Var        : Token name, Expr initializer"
     ));
   }
 
