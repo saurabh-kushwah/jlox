@@ -12,6 +12,7 @@ import com.saurabhkushwah.lox.Stmt.Expression;
 import com.saurabhkushwah.lox.Stmt.If;
 import com.saurabhkushwah.lox.Stmt.Print;
 import com.saurabhkushwah.lox.Stmt.Var;
+import com.saurabhkushwah.lox.Stmt.While;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
@@ -212,6 +213,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   public Void visitPrintStmt(Print stmt) {
     Object value = evaluate(stmt.expression);
     System.out.println(stringify(value));
+    return null;
+  }
+
+  @Override
+  public Void visitWhileStmt(While stmt) {
+
+    while (isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.body);
+    }
+
     return null;
   }
 
