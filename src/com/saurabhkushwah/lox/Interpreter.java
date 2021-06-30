@@ -8,6 +8,7 @@ import com.saurabhkushwah.lox.Expr.Unary;
 import com.saurabhkushwah.lox.Expr.Variable;
 import com.saurabhkushwah.lox.Stmt.Block;
 import com.saurabhkushwah.lox.Stmt.Expression;
+import com.saurabhkushwah.lox.Stmt.If;
 import com.saurabhkushwah.lox.Stmt.Print;
 import com.saurabhkushwah.lox.Stmt.Var;
 import java.util.List;
@@ -175,6 +176,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   @Override
   public Void visitExpressionStmt(Expression stmt) {
     evaluate(stmt.expression);
+    return null;
+  }
+
+  @Override
+  public Void visitIfStmt(If stmt) {
+    Object value = evaluate(stmt.condition);
+    if (isTruthy(value)) {
+      execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      execute(stmt.elseBranch);
+    }
     return null;
   }
 
