@@ -23,7 +23,8 @@ public class GenerateAst {
         "Assign   : Token name, Expr value",
         "Grouping : Expr expression",
         "Unary    : Token operator, Expr right",
-        "Binary   : Expr left, Token operator, Expr right"
+        "Binary   : Expr left, Token operator, Expr right",
+        "Logical  : Expr left, Token operator, Expr right"
     ));
 
     defineAst(outputDir, "Stmt", Arrays.asList(

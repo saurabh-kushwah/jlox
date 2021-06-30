@@ -1,5 +1,6 @@
 package com.saurabhkushwah.lox;
 
+import static com.saurabhkushwah.lox.TokenType.AND;
 import static com.saurabhkushwah.lox.TokenType.BANG;
 import static com.saurabhkushwah.lox.TokenType.BANG_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.ELSE;
@@ -18,6 +19,7 @@ import static com.saurabhkushwah.lox.TokenType.LESS_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.MINUS;
 import static com.saurabhkushwah.lox.TokenType.NIL;
 import static com.saurabhkushwah.lox.TokenType.NUMBER;
+import static com.saurabhkushwah.lox.TokenType.OR;
 import static com.saurabhkushwah.lox.TokenType.PLUS;
 import static com.saurabhkushwah.lox.TokenType.PRINT;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_BRACE;
@@ -47,7 +49,9 @@ import java.util.List;
  * block          → "{" declaration* "}" ;
  * expression     → assignment ;
  * assignment     → IDENTIFIER "=" assignment
- *                | equality ;
+ *                | logic_or ;
+ * logic_or       → logic_and ( "or" logic_and )*
+ * logic_and      → equality ( "and" equality )*
  * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
  * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
  * term           → factor ( ( "-" | "+" ) factor )* ;
@@ -68,6 +72,7 @@ public class Parser {
 
   private final List<Token> tokens;
   private int current;
+
   public Parser(List<Token> tokens) {
     this.tokens = tokens;
   }
@@ -170,7 +175,7 @@ public class Parser {
   }
 
   private Expr assignment() {
-    Expr expr = equality();
+    Expr expr = or();
 
     if (match(EQUAL)) {
       Token equals = previous();
@@ -182,6 +187,30 @@ public class Parser {
       }
 
       error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
+
+  private Expr or() {
+    Expr expr = and();
+
+    while (match(OR)) {
+      Token operator = previous();
+      Expr right = and();
+      expr = new Expr.Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr and() {
+    Expr expr = equality();
+
+    while (match(AND)) {
+      Token operator = previous();
+      Expr right = equality();
+      expr = new Expr.Logical(expr, operator, right);
     }
 
     return expr;
