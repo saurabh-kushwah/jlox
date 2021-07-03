@@ -3,6 +3,7 @@ package com.saurabhkushwah.lox;
 import static com.saurabhkushwah.lox.TokenType.AND;
 import static com.saurabhkushwah.lox.TokenType.BANG;
 import static com.saurabhkushwah.lox.TokenType.BANG_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.BREAK;
 import static com.saurabhkushwah.lox.TokenType.COMMA;
 import static com.saurabhkushwah.lox.TokenType.ELSE;
 import static com.saurabhkushwah.lox.TokenType.EOF;
@@ -51,6 +52,7 @@ import java.util.List;
  * statement      → exprStmt
  *                | forStmt
  *                | ifStmt
+ *                | breakStmt
  *                | printStmt
  *                | returnStmt
  *                | whileStmt
@@ -58,6 +60,7 @@ import java.util.List;
  * exprStmt       → expression ";" ;
  * forStmt        → "for" "(" ( varDec | exprStmt | ";" ) expression? ";" expression? ")" statement ;
  * ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
+ * breakStmt      → "break" ";" ;
  * printStmt      → print expression ";" ;
  * returnStmt     → "return" expression? ";" ;
  * whileStmt      → "while" "(" expression ")" statement ;
@@ -157,7 +160,7 @@ public class Parser {
       initializer = expression();
     }
 
-    consume(SEMICOLON, "Expect ';' after variable declarations");
+    consume(SEMICOLON, "Expect ';' after variable declaration");
     return new Stmt.Var(name, initializer);
   }
 
@@ -186,7 +189,18 @@ public class Parser {
       return returnStatement();
     }
 
+    if (match(BREAK)) {
+      return breakStatement();
+    }
+
     return expressionStatement();
+  }
+
+  private Stmt breakStatement() {
+    Token keyword = previous();
+
+    consume(SEMICOLON, "Expect ';' after break keyword.");
+    return new Stmt.Break(keyword);
   }
 
   private Stmt returnStatement() {

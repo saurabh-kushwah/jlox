@@ -70,20 +70,20 @@ public class Lox {
   }
 
   private static void report(int line, String where, String message) {
-    System.err.printf("[Line %d] Error %s: %s\n", line, where, message);
+    System.err.printf("Error [Line %d] %s: %s\n", line, where, message);
     hadError = true;
   }
 
   public static void error(Token token, String message) {
     if (token.type == TokenType.EOF) {
-      report(token.line, " at end", message);
+      report(token.line, "at end", message);
     } else {
-      report(token.line, " at '" + token.lexeme + "'", message);
+      report(token.line, "at '" + token.lexeme + "'", message);
     }
   }
 
   public static void runtimeError(RuntimeError error) {
-    System.err.println(error.getMessage() + "\n[Line " + error.token.line + "]");
+    System.err.printf("Error [Line %s] : %s\n", error.token.line, error.getMessage());
     hadRuntimeError = true;
   }
 }

@@ -3,6 +3,7 @@ package com.saurabhkushwah.lox;
 import static com.saurabhkushwah.lox.TokenType.AND;
 import static com.saurabhkushwah.lox.TokenType.BANG;
 import static com.saurabhkushwah.lox.TokenType.BANG_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.BREAK;
 import static com.saurabhkushwah.lox.TokenType.CLASS;
 import static com.saurabhkushwah.lox.TokenType.COMMA;
 import static com.saurabhkushwah.lox.TokenType.DOT;
@@ -58,6 +59,7 @@ public class Scanner {
 
     keywords.put("for", FOR);
     keywords.put("while", WHILE);
+    keywords.put("break", BREAK);
 
     keywords.put("true", TRUE);
     keywords.put("false", FALSE);

@@ -43,10 +43,23 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
     try {
       for (Stmt stmt : statements) {
-        execute(stmt);
+        executeStatement(stmt);
       }
     } catch (RuntimeError error) {
       Lox.runtimeError(error);
+    }
+  }
+
+  // catches invalid use of keywords
+  private void executeStatement(Stmt stmt) {
+    try {
+      execute(stmt);
+    } catch (Return returnValue) {
+      Lox.runtimeError(
+          new RuntimeError(returnValue.keyword, "Cannot use 'return' outside function"));
+    } catch (Break error) {
+      Lox.runtimeError(
+          new RuntimeError(error.keyword, "Cannot use 'break' outside for/while loop"));
     }
   }
 
@@ -259,6 +272,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   }
 
   @Override
+  public Object visitBreakStmt(Stmt.Break stmt) {
+    throw new Break(stmt.keyword);
+  }
+
+  @Override
   public Void visitPrintStmt(Print stmt) {
     Object value = evaluate(stmt.expression);
     System.out.println(stringify(value));
@@ -267,9 +285,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
   @Override
   public Void visitWhileStmt(While stmt) {
-
-    while (isTruthy(evaluate(stmt.condition))) {
-      execute(stmt.body);
+    try {
+      while (isTruthy(evaluate(stmt.condition))) {
+        execute(stmt.body);
+      }
+    } catch (Break ignored) {
     }
 
     return null;
@@ -282,7 +302,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
       value = evaluate(stmt.value);
     }
 
-    throw new Return(value);
+    throw new Return(stmt.keyword, value);
   }
 
   @Override
