@@ -3,12 +3,14 @@ package com.saurabhkushwah.lox;
 import static com.saurabhkushwah.lox.TokenType.AND;
 import static com.saurabhkushwah.lox.TokenType.BANG;
 import static com.saurabhkushwah.lox.TokenType.BANG_EQUAL;
+import static com.saurabhkushwah.lox.TokenType.COMMA;
 import static com.saurabhkushwah.lox.TokenType.ELSE;
 import static com.saurabhkushwah.lox.TokenType.EOF;
 import static com.saurabhkushwah.lox.TokenType.EQUAL;
 import static com.saurabhkushwah.lox.TokenType.EQUAL_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.FALSE;
 import static com.saurabhkushwah.lox.TokenType.FOR;
+import static com.saurabhkushwah.lox.TokenType.FUN;
 import static com.saurabhkushwah.lox.TokenType.GREATER;
 import static com.saurabhkushwah.lox.TokenType.GREATER_EQUAL;
 import static com.saurabhkushwah.lox.TokenType.IDENTIFIER;
@@ -23,6 +25,7 @@ import static com.saurabhkushwah.lox.TokenType.NUMBER;
 import static com.saurabhkushwah.lox.TokenType.OR;
 import static com.saurabhkushwah.lox.TokenType.PLUS;
 import static com.saurabhkushwah.lox.TokenType.PRINT;
+import static com.saurabhkushwah.lox.TokenType.RETURN;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_BRACE;
 import static com.saurabhkushwah.lox.TokenType.RIGHT_PAREN;
 import static com.saurabhkushwah.lox.TokenType.SEMICOLON;
@@ -39,18 +42,24 @@ import java.util.List;
 /*
  * program        → declaration* EOF
  * declaration    → varDec
+ *                | funDec
  *                | statement
  * varDec         → "var" IDENTIFIER ( "=" expression )? ";" ;
+ * funDec         → "fun" function ;
+ * function       → IDENTIFIER "(" parameter? ")" block ;
+ * parameter      → IDENTIFIER ( "," IDENTIFIER )* ;
  * statement      → exprStmt
- *                | forStmt ;
- *                | ifStmt ;
- *                | printStmt ;
- *                | whileStmt ;
+ *                | forStmt
+ *                | ifStmt
+ *                | printStmt
+ *                | returnStmt
+ *                | whileStmt
  *                | block ;
  * exprStmt       → expression ";" ;
  * forStmt        → "for" "(" ( varDec | exprStmt | ";" ) expression? ";" expression? ")" statement ;
  * ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
  * printStmt      → print expression ";" ;
+ * returnStmt     → "return" expression? ";" ;
  * whileStmt      → "while" "(" expression ")" statement ;
  * block          → "{" declaration* "}" ;
  * expression     → assignment ;
@@ -63,7 +72,9 @@ import java.util.List;
  * term           → factor ( ( "-" | "+" ) factor )* ;
  * factor         → unary ( ( "/" | "*" ) unary )* ;
  * unary          → ( "!" | "-" ) unary
- *                | primary ;
+ *                | call ;
+ * call           → primary ( "(" argument? ")" )* ;
+ * argument       → expression ( "," expression )*
  * primary        → NUMBER | STRING | "true" | "false" | "nil"
  *                | "(" expression ")"
  *                | IDENTIFIER ;
@@ -73,6 +84,9 @@ import java.util.List;
  * Language Notes
  * 1. Support operator chaining similar to python, js for all binary operator.
  * Ex. a == b == c == d, a / b / c / d, a >= b >= c >= d
+ * <p>
+ * 2. Support chaining of function calls
+ * Ex. getCallback(1)(2)
  */
 public class Parser {
 
@@ -103,11 +117,36 @@ public class Parser {
         return varDeclaration();
       }
 
+      if (match(FUN)) {
+        return funDeclaration("function");
+      }
+
       return statement();
     } catch (ParseError error) {
       synchronize();
       return null;
     }
+  }
+
+  private Stmt.Function funDeclaration(String type) {
+    Token name = consume(IDENTIFIER, "Expect " + type + " name.");
+    consume(LEFT_PAREN, "Expect '(' after " + type + " name.");
+
+    List<Token> parameters = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "Cannot have more than 255 parameters");
+        }
+        parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+      } while (match(COMMA));
+    }
+
+    consume(RIGHT_PAREN, "Expect ')' after " + type + " name.");
+
+    consume(LEFT_BRACE, "Expect '{' before " + type + " body.");
+    List<Stmt> body = block();
+    return new Stmt.Function(name, parameters, body);
   }
 
   private Stmt varDeclaration() {
@@ -143,7 +182,23 @@ public class Parser {
       return forStatement();
     }
 
+    if (match(RETURN)) {
+      return returnStatement();
+    }
+
     return expressionStatement();
+  }
+
+  private Stmt returnStatement() {
+    Token keyword = previous();
+    Expr expr = null;
+
+    if (!check(SEMICOLON)) {
+      expr = expression();
+    }
+
+    consume(SEMICOLON, "Expect ';' after return value");
+    return new Stmt.Return(keyword, expr);
   }
 
   private Stmt forStatement() {
@@ -338,7 +393,37 @@ public class Parser {
       return new Expr.Unary(operator, right);
     }
 
-    return primary();
+    return call();
+  }
+
+  private Expr call() {
+    Expr expr = primary();
+
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        expr = finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
+  }
+
+  private Expr finishCall(Expr expr) {
+    List<Expr> arguments = new ArrayList<>();
+
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (arguments.size() >= 255) {
+          error(peek(), "Can't have more than 255 arguments");
+        }
+        arguments.add(expression());
+      } while (match(COMMA));
+    }
+
+    Token paren = consume(RIGHT_PAREN, "expect ')'  after arguments.");
+    return new Expr.Call(expr, paren, arguments);
   }
 
   private Expr primary() {

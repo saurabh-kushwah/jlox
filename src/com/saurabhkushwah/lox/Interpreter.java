@@ -2,6 +2,7 @@ package com.saurabhkushwah.lox;
 
 import com.saurabhkushwah.lox.Expr.Assign;
 import com.saurabhkushwah.lox.Expr.Binary;
+import com.saurabhkushwah.lox.Expr.Call;
 import com.saurabhkushwah.lox.Expr.Grouping;
 import com.saurabhkushwah.lox.Expr.Literal;
 import com.saurabhkushwah.lox.Expr.Logical;
@@ -9,17 +10,37 @@ import com.saurabhkushwah.lox.Expr.Unary;
 import com.saurabhkushwah.lox.Expr.Variable;
 import com.saurabhkushwah.lox.Stmt.Block;
 import com.saurabhkushwah.lox.Stmt.Expression;
+import com.saurabhkushwah.lox.Stmt.Function;
 import com.saurabhkushwah.lox.Stmt.If;
 import com.saurabhkushwah.lox.Stmt.Print;
 import com.saurabhkushwah.lox.Stmt.Var;
 import com.saurabhkushwah.lox.Stmt.While;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
-  private Environment environment = new Environment();
+  final Environment globals = new Environment();
+  private Environment environment = globals;
 
   public void interpret(List<Stmt> statements) {
+    globals.define("clock", new LoxCallable() {
+      @Override
+      public int arity() {
+        return 0;
+      }
+
+      @Override
+      public Object call(Interpreter interpreter, List<Object> arguments) {
+        return (double) System.currentTimeMillis() / 1000.0;
+      }
+
+      @Override
+      public String toString() {
+        return "<native fn>";
+      }
+    });
+
     try {
       for (Stmt stmt : statements) {
         execute(stmt);
@@ -53,6 +74,27 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   @Override
   public Object visitGroupingExpr(Grouping expr) {
     return evaluate(expr.expression);
+  }
+
+  @Override
+  public Object visitCallExpr(Call expr) {
+    Object callee = evaluate(expr.callee);
+
+    List<Object> arguments = expr.arguments.stream()
+        .map(this::evaluate)
+        .collect(Collectors.toList());
+
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+    }
+
+    LoxCallable function = (LoxCallable) callee;
+    if (arguments.size() != function.arity()) {
+      throw new RuntimeError(expr.paren,
+          String.format("Expect %d arguments but got %d.", arguments.size(), function.arity()));
+    }
+
+    return function.call(this, arguments);
   }
 
   @Override
@@ -199,6 +241,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   }
 
   @Override
+  public Void visitFunctionStmt(Function stmt) {
+    LoxFunction loxFunction = new LoxFunction(stmt);
+    environment.define(stmt.name.lexeme, loxFunction);
+    return null;
+  }
+
+  @Override
   public Void visitIfStmt(If stmt) {
     Object value = evaluate(stmt.condition);
     if (isTruthy(value)) {
@@ -227,6 +276,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   }
 
   @Override
+  public Object visitReturnStmt(Stmt.Return stmt) {
+    Object value = null;
+    if (stmt.value != null) {
+      value = evaluate(stmt.value);
+    }
+
+    throw new Return(value);
+  }
+
+  @Override
   public Void visitVarStmt(Var stmt) {
     Object value = null;
 
@@ -244,7 +303,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     return null;
   }
 
-  private void executeBlock(List<Stmt> statements, Environment environment) {
+  public void executeBlock(List<Stmt> statements, Environment environment) {
     Environment previous = this.environment;
 
     try {
