@@ -104,7 +104,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     LoxCallable function = (LoxCallable) callee;
     if (arguments.size() != function.arity()) {
       throw new RuntimeError(expr.paren,
-          String.format("Expect %d arguments but got %d.", arguments.size(), function.arity()));
+          String.format("Expect %d arguments but got %d.", function.arity(), arguments.size()));
     }
 
     return function.call(this, arguments);
@@ -187,6 +187,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     }
 
     return evaluate(expr.right);
+  }
+
+  @Override
+  public Object visitFunctionExpr(Expr.Function expr) {
+    return new LoxFunction(new Function(null, expr.parameters, expr.body),
+        environment);
   }
 
   private Object evaluate(Expr expr) {

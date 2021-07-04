@@ -21,6 +21,8 @@ abstract class Expr {
     R visitBinaryExpr(Binary expr);
 
     R visitLogicalExpr(Logical expr);
+
+    R visitFunctionExpr(Function expr);
   }
 
   static class Literal extends Expr {
@@ -149,6 +151,22 @@ abstract class Expr {
     final Expr left;
     final Token operator;
     final Expr right;
+  }
+
+  static class Function extends Expr {
+
+    final List<Token> parameters;
+    final List<Stmt> body;
+
+    Function(List<Token> parameters, List<Stmt> body) {
+      this.parameters = parameters;
+      this.body = body;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitFunctionExpr(this);
+    }
   }
 
   abstract <R> R accept(Visitor<R> visitor);

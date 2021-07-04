@@ -75,9 +75,11 @@ import java.util.List;
  * term           → factor ( ( "-" | "+" ) factor )* ;
  * factor         → unary ( ( "/" | "*" ) unary )* ;
  * unary          → ( "!" | "-" ) unary
- *                | call ;
+ *                | call
+ *                | funExpr ;
  * call           → primary ( "(" argument? ")" )* ;
- * argument       → expression ( "," expression )*
+ * argument       → expression ( "," expression )* ;
+ * funExpr        → "fun" "(" parameter? ")" block ;
  * primary        → NUMBER | STRING | "true" | "false" | "nil"
  *                | "(" expression ")"
  *                | IDENTIFIER ;
@@ -407,7 +409,31 @@ public class Parser {
       return new Expr.Unary(operator, right);
     }
 
+    if (match(FUN)) {
+      return funExpression();
+    }
+
     return call();
+  }
+
+  private Expr funExpression() {
+    consume(LEFT_PAREN, "Expect '(' after fun keyword.");
+
+    List<Token> parameters = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "Cannot have more than 255 parameters");
+        }
+        parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+      } while (match(COMMA));
+    }
+
+    consume(RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(LEFT_BRACE, "Expect '{' before function body.");
+    List<Stmt> body = block();
+
+    return new Expr.Function(parameters, body);
   }
 
   private Expr call() {
