@@ -195,10 +195,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
         environment);
   }
 
-  private Object evaluate(Expr expr) {
-    return expr.accept(this);
-  }
-
   private String stringify(Object object) {
     if (object == null) {
       return "nil";
@@ -251,6 +247,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     }
 
     return true;
+  }
+
+  private Object evaluate(Expr expr) {
+    return expr.accept(this);
   }
 
   @Override
