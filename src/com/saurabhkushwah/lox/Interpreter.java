@@ -15,12 +15,15 @@ import com.saurabhkushwah.lox.Stmt.If;
 import com.saurabhkushwah.lox.Stmt.Print;
 import com.saurabhkushwah.lox.Stmt.Var;
 import com.saurabhkushwah.lox.Stmt.While;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
   final Environment globals = new Environment();
+  final Map<Expr, Integer> locals = new HashMap<>();
   private Environment environment = globals;
 
   public void interpret(List<Stmt> statements) {
@@ -74,13 +77,29 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
   @Override
   public Object visitVariableExpr(Variable expr) {
-    return environment.get(expr.name);
+    return lookUpVariable(expr.name, expr);
+  }
+
+  private Object lookUpVariable(Token name, Variable expr) {
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      return environment.getAt(distance, name.lexeme);
+    }
+
+    return globals.get(name);
   }
 
   @Override
   public Object visitAssignExpr(Assign expr) {
     Object value = evaluate(expr.value);
-    environment.assign(expr.name, value);
+
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      environment.assignAt(distance, expr.name, value);
+    } else {
+      globals.assign(expr.name, value);
+    }
+
     return value;
   }
 
@@ -340,5 +359,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     } finally {
       this.environment = previous;
     }
+  }
+
+  // tells interpreter current scope - scope at variable defined
+  public void resolve(Expr expr, int depth) {
+    locals.put(expr, depth);
   }
 }

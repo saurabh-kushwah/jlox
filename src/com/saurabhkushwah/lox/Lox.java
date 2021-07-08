@@ -61,6 +61,9 @@ public class Lox {
       return;
     }
 
+    Resolver resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
+
     interpreter.interpret(statements);
 //    System.out.println(new AstPrinter().print(expr));
   }
