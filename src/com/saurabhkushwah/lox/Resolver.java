@@ -22,10 +22,17 @@ import java.util.Stack;
 
 public class Resolver implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
+  private enum FunctionType {
+    FUNCTION,
+    NONE
+  }
+
   private final Interpreter interpreter;
 
   // String, Boolean -> token, isDefined
   private final Stack<HashMap<String, Boolean>> scopes = new Stack<>();
+
+  private FunctionType currentFunction = FunctionType.NONE;
 
   public Resolver(Interpreter interpreter) {
     this.interpreter = interpreter;
@@ -120,7 +127,7 @@ public class Resolver implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     declare(stmt.name);
     define(stmt.name);
 
-    resolveFunction(stmt);
+    resolveFunction(stmt, FunctionType.FUNCTION);
     return null;
   }
 
@@ -154,9 +161,14 @@ public class Resolver implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
   @Override
   public Object visitReturnStmt(Stmt.Return stmt) {
+    if(currentFunction == FunctionType.NONE){
+      Lox.error(stmt.keyword, "Can't return from top-level code");
+    }
+
     if (stmt.value != null) {
       resolve(stmt.value);
     }
+
     return null;
   }
 
@@ -202,7 +214,10 @@ public class Resolver implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
     scope.put(name.lexeme, true);
   }
 
-  private void resolveFunction(Stmt.Function stmt) {
+  private void resolveFunction(Stmt.Function stmt, FunctionType functionType) {
+    FunctionType enclosingType = functionType;
+    currentFunction = functionType;
+
     beginScope();
     for (Token param : stmt.parameters) {
       declare(param);
