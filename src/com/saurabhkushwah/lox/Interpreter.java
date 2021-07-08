@@ -57,9 +57,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
   private void executeStatement(Stmt stmt) {
     try {
       execute(stmt);
-    } catch (Return returnValue) {
-      Lox.runtimeError(
-          new RuntimeError(returnValue.keyword, "Cannot use 'return' outside function"));
     } catch (Break error) {
       Lox.runtimeError(
           new RuntimeError(error.keyword, "Cannot use 'break' outside for/while loop"));

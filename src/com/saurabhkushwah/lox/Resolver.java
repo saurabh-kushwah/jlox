@@ -24,9 +24,7 @@ public class Resolver implements Expr.Visitor<Object>, Stmt.Visitor<Object> {
 
   private final Interpreter interpreter;
 
-  /*
-   * String, Boolean -> token, isDefined
-   */
+  // String, Boolean -> token, isDefined
   private final Stack<HashMap<String, Boolean>> scopes = new Stack<>();
 
   public Resolver(Interpreter interpreter) {
